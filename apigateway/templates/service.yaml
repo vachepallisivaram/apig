@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "apigateway.fullname" . }}
+  annotations: 
+    "service.beta.kubernetes.io/aws-load-balancer-connection-idle-timeout": "4000"
+    #"service.beta.kubernetes.io/aws-load-balancer-nlb-target-type": "ip"
+    #"service.beta.kubernetes.io/aws-load-balancer-type": external
+    #"service.beta.kubernetes.io/aws-load-balancer-scheme": internet-facing
+  labels:
+    {{- include "apigateway.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "apigateway.selectorLabels" . | nindent 4 }}

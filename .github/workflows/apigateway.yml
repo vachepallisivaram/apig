@@ -1,0 +1,78 @@
+name: CI - CD @ apigateway
+on:
+  push:
+    branches:
+      - DevOps
+  pull_request:
+    branches: 
+      - DevOps
+  workflow_call: 
+    secrets:
+      AWS_ACCESS_KEY_ID:
+        required: true
+      AWS_SECRET_ACCESS_KEY:
+        required: true
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env: 
+      MODULE_NAME: apigateway
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          repository: 'padamkirankumar/apig'
+          ref: DevOps
+      - name: Set up Maven
+        uses: stCarolas/setup-maven@v4
+        with:
+          maven-version: 3.8.2
+      - name: Cache Maven packages
+        uses: actions/cache@v2
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+      - name: Build with Maven
+        run: mvn -B package --file pom.xml -DskipTests 
+      - name: Persistent workflow data as artificats 
+        uses: actions/upload-artifact@v2
+        with: 
+          name: github-actions-artifact
+          path: ${{ env.MODULE_NAME }}/target
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+  
+      - name: Build and Push to DOCKERHUB
+        run: |
+         docker build -t ${{ env.MODULE_NAME }}  .
+         docker tag ${{ env.MODULE_NAME }}  padamkiran/${{ env.MODULE_NAME }}:${{ github.sha }}
+         docker push padamkiran/${{ env.MODULE_NAME }}:${{ github.sha }}
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    env: 
+      MODULE_NAME: apigateway
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          repository: 'padamkirankumar/apig' 
+          ref: DevOps       
+      - name: AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: helm deploy
+        uses: netf/helm-eks-action@v1
+        with:
+          cluster-name: Kiran-K8S-Cluster
+          command: helm upgrade --set image.tag="$GITHUB_SHA" --install ${{ env.MODULE_NAME }} ./${{ env.MODULE_NAME }}

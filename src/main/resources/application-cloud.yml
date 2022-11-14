@@ -1,0 +1,295 @@
+server:
+  port: 9097
+  
+spring:
+  application:
+    name: gateway-service
+  
+  datasource:
+    platform: postgres
+    url: jdbc:postgresql://usermanagement-pos:5432/UserManagement
+    username: postgres
+    password: Otsi@123
+   
+  jpa:
+   hibernate:
+    ddl-auto: update
+   database-platform: com.otsi.retail.gateway.util.CustomPGGeomJsonDialect
+   show-sql: true
+
+  main:
+    allow-bean-definition-overriding: true
+  cloud:
+    gateway:
+      httpclient:
+        pool:
+          type: fixed
+          max-connections: 10000
+          acquire-timeout: 800000
+          max-life-time: 3000s
+          max-idle-time: 600s
+        connect-timeout: 80000
+        response-timeout: 600s
+        
+      discovery:
+        locator:
+          enabled: true
+      routes:
+
+      - id: new-sale-api 
+        uri: http://new-sale-api:8081
+        predicates:
+        - Path=/new-sale/**
+        filters:
+        - RewritePath=/new-sale/(?<path>.*), /$\{path}
+        - AuthFilter
+        - name: Retry
+          args:
+           retries: 5
+           series:
+           - CLIENT_ERROR
+           - INFORMATIONAL
+           - REDIRECTION
+           - SERVER_ERROR
+           statuses:
+           - INTERNAL_SERVER_ERROR
+           methods:
+           - DELETE
+           - GET
+           - HEAD
+           - POST
+           - PUT
+           - TRACE
+           - OPTIONS
+           - PATCH
+           
+           exceptions:
+           - reactor.netty.http.client.PrematureCloseException
+           - io.netty.channel.unix.Errors.NativeIoException
+        metadata:
+          response-timeout: 600000
+          connect-timeout: 600000
+        
+           
+        
+      - id: hsn-details 
+        uri: http://hsn-details:8083
+        predicates:
+        - Path=/hsn-details/**
+        filters:
+        - RewritePath=/hsn-details/(?<path>.*), /$\{path}
+        - AuthFilter
+        - name: Retry
+          args:
+           retries: 10
+           series:
+           - CLIENT_ERROR
+           - INFORMATIONAL
+           - REDIRECTION
+           - SERVER_ERROR
+           statuses:
+           - INTERNAL_SERVER_ERROR
+           methods:
+           - DELETE
+           - GET
+           - HEAD
+           - POST
+           - PUT
+           - TRACE
+           - OPTIONS
+           - PATCH
+           
+           exceptions:
+           - reactor.netty.http.client.PrematureCloseException
+           - io.netty.channel.unix.Errors.NativeIoException
+        metadata:
+          response-timeout: 800000
+          connect-timeout: 800000
+        
+      
+      - id: usermanagement 
+        uri: http://usermanagement:8084
+        predicates:
+        - Path=/user-management/**
+        filters:
+        - RewritePath=/user-management/(?<path>.*), /$\{path}
+        - AuthFilter
+        - name: Retry
+          args:
+           retries: 5
+           series:
+           - CLIENT_ERROR
+           - INFORMATIONAL
+           - REDIRECTION
+           - SERVER_ERROR
+           statuses:
+           - INTERNAL_SERVER_ERROR
+           methods:
+           - DELETE
+           - GET
+           - HEAD
+           - POST
+           - PUT
+           - TRACE
+           - OPTIONS
+           - PATCH
+           
+           exceptions:
+           - reactor.netty.http.client.PrematureCloseException
+           - io.netty.channel.unix.Errors.NativeIoException
+        metadata:
+          response-timeout: 600000
+          connect-timeout: 600000
+        
+      
+        
+      - id: payment-gateway
+        uri: http://payment-gateway:8086/
+        predicates:
+        - Path=/paymentgateway/**
+        filters:
+        - RewritePath=/paymentgateway/(?<path>.*), /$\{path}
+        - AuthFilter
+        - name: Retry
+          args:
+           retries: 10
+           series:
+           - CLIENT_ERROR
+           - INFORMATIONAL
+           - REDIRECTION
+           - SERVER_ERROR
+           statuses:
+           - INTERNAL_SERVER_ERROR
+           methods:
+           - DELETE
+           - GET
+           - HEAD
+           - POST
+           - PUT
+           - TRACE
+           - OPTIONS
+           - PATCH
+           
+           exceptions:
+           - reactor.netty.http.client.PrematureCloseException
+           - io.netty.channel.unix.Errors.NativeIoException
+        metadata:
+          response-timeout: 600000
+          connect-timeout: 600000
+        
+        
+       
+      - id: inventory-module
+        uri: http://inventory-module:9092/
+        predicates:
+        - Path=/inventory/**
+        filters:
+        - RewritePath=/inventory/(?<path>.*), /$\{path}
+        - AuthFilter
+        - name: Retry
+          args:
+           retries: 5
+           series:
+           - CLIENT_ERROR
+           - INFORMATIONAL
+           - REDIRECTION
+           - SERVER_ERROR
+           statuses:
+           - INTERNAL_SERVER_ERROR
+           methods:
+           - DELETE
+           - GET
+           - HEAD
+           - POST
+           - PUT
+           - TRACE
+           - OPTIONS
+           - PATCH
+           
+           exceptions:
+           - reactor.netty.http.client.PrematureCloseException
+           - io.netty.channel.unix.Errors.NativeIoException
+        metadata:
+          response-timeout: 600000
+          connect-timeout: 600000
+        
+     
+     
+      - id: connection-pool
+        uri: http://connection-pool:8085/
+        predicates:
+        - Path=/connection-pool/**
+        filters:
+        - RewritePath=/connection-pool/(?<path>.*), /$\{path}
+        - AuthFilter
+        - name: Retry
+          args:
+           retries: 5
+           series:
+           - CLIENT_ERROR
+           - INFORMATIONAL
+           - REDIRECTION
+           - SERVER_ERROR
+           statuses:
+           - INTERNAL_SERVER_ERROR
+           methods:
+           - DELETE
+           - GET
+           - HEAD
+           - POST
+           - PUT
+           - TRACE
+           - OPTIONS
+           - PATCH
+           
+           exceptions:
+           - reactor.netty.http.client.PrematureCloseException
+           - io.netty.channel.unix.Errors.NativeIoException
+        metadata:
+          response-timeout: 600000
+          connect-timeout: 600000
+               
+       
+      - id: openapi
+        uri: http://localhost:${server.port}
+        predicates:
+        - Path=/v3/api-docs/**
+        filters:
+        - RewritePath=/v3/api-docs/(?<path>.*), /$\{path}/v3/api-docs
+        metadata:
+          response-timeout: 200
+          connect-timeout: 200
+        
+      
+          
+        
+eureka:
+  client:
+    register-with-eureka: false
+    fetch-registry: false
+    service-url:
+      defaultZone: http://10.100.143.45:8762/eureka/
+
+app:
+ setWebEnvironment(false);
+
+
+#####################properties related for aws cognito for authentication provider####################
+
+Cognito:
+     aws: 
+        accesskey: AKIAYZOXA3O4HNGVWCQL
+        secret_access_key: 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 
+        client_id: 1tk6nn66mll5thvmgdlnuo54fi
+        userpool_id: ap-south-1_gttd6A4tT
+        region: ap-south-1
+        idTokenPoolUrl: https://cognito-idp.ap-south-1.amazonaws.com/ap-south-1_gttd6A4tT
+logging:
+   level:
+      org:
+       springframework:
+                security:
+                       web:
+                         FilterChainProxy : debug
+    
+###################################### End #################################################

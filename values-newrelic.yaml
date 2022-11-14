@@ -1,0 +1,22 @@
+global:
+  licenseKey: c2aefddadccf9923f906fa9e67a55c5a9a75NRAL
+  cluster: Microservice-K8S-Cluster
+
+prometheus:
+  # Automatically scrape prometheus metrics for annotated services in the cluster
+  # Collecting prometheus metrics for large clusters might impact data usage significantly
+  enabled: true
+  lowDataMode: true  # Skip ingesting cluster-level metrics
+webhook:
+  # Deploy our webhook to link APM and Kubernetes entities
+  enabled: true
+kubeEvents:
+  # Report Kubernetes events
+  enabled: true
+logging:
+  # Report logs for containers running in the cluster
+  enabled: true
+ksm:
+  # Deploy kube-state-metrics in the cluster.
+  # Set this to true unless it is already deployed.
+  enabled: true
