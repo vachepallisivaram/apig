@@ -74,5 +74,5 @@ jobs:
       - name: helm deploy
         uses: netf/helm-eks-action@v1
         with:
-          cluster-name: Kiran-K8S-Cluster
+          cluster-name: Kiran-EKS-Cluster
           command: helm upgrade --set image.tag="$GITHUB_SHA" --install ${{ env.MODULE_NAME }} ./${{ env.MODULE_NAME }}
