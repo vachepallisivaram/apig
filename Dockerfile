@@ -18,4 +18,3 @@ EXPOSE 9097
 
 #ENTRYPOINT ["java","-javaagent:target/newrelic/newrelic.jar", "-Dspring.profiles.active=cloud", "-jar", "target/apigateway.jar"]
 ENTRYPOINT ["java", "-Dspring.profiles.active=cloud", "-jar", "target/apigateway.jar"]
-
